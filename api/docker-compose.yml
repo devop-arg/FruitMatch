@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  fruitmatch-api:
+    build: .
+    container_name: fruitmatch_scores_api
+    restart: unless-stopped
+    ports:
+      - "3777:3777"
+    volumes:
+      - ./data:/app/data
+    mem_limit: 50m
+    mem_reservation: 20m
+    cpus: 0.25
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3777/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"

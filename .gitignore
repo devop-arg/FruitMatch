@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+
+# Data files (contain user data)
+api/data/scores.json
+api/data/stats.json
+api/data/progress.json
+api/data/gamelogs.json
+api/data/deleted_users.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*

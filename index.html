@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#1a0a2e">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="author" content="DevCatanzaro">
+    <meta name="description" content="FruitMatch - A Match-3 puzzle game with fruits, jackpots and adventure mode">
+    <title>FruitMatch - Match 3</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="lang.js"></script>
+    <script src="api.js"></script>
+</head>
+<body>
+    <!-- Home Screen -->
+    <div id="menu-screen" class="screen active">
+        <div class="menu-container">
+            <div class="game-logo">
+                <span class="logo-fruits">
+                    <span class="logo-fruit cherry">🍒</span>
+                    <span class="logo-fruit grape">🍇</span>
+                    <span class="logo-fruit orange">🍊</span>
+                </span>
+                <h1 data-i18n="title">FruitMatch</h1>
+                <p class="tagline" data-i18n="tagline">The Lucky Match-3</p>
+            </div>
+            
+            <!-- User Info + Ranking Container -->
+            <div class="menu-top-row">
+                <!-- Logged in user info -->
+                <div class="user-info" id="user-info">
+                    <div class="user-greeting">
+                        <span><span data-i18n="menu.hello">Hello,</span> <strong id="menu-username">-</strong></span>
+                        <span class="coins-inline">💰 <span id="total-coins">0</span></span>
+                    </div>
+                    <div class="user-scores" id="user-scores"></div>
+                </div>
+
+                <!-- Compact Ranking Box -->
+                <div id="ranking-compact" class="ranking-compact">
+                    <div class="ranking-compact-title">🏆 <span data-i18n="menu.top3">Top 3</span></div>
+                    <div class="ranking-compact-grid">
+                        <div class="ranking-compact-section">
+                            <div class="ranking-section-title">🎰 <span data-i18n="menu.free">Free</span></div>
+                            <div class="ranking-mini-list" id="ranking-free"></div>
+                        </div>
+                        <div class="ranking-compact-section">
+                            <div class="ranking-section-title">⏱️ <span data-i18n="menu.clock">Timed</span></div>
+                            <div class="ranking-mini-list" id="ranking-timed"></div>
+                        </div>
+                        <div class="ranking-compact-section">
+                            <div class="ranking-section-title">🎯 <span data-i18n="menu.movesShort">Moves</span></div>
+                            <div class="ranking-mini-list" id="ranking-moves"></div>
+                        </div>
+                        <div class="ranking-compact-section">
+                            <div class="ranking-section-title">🗺️ <span data-i18n="menu.adventureShort">Advent.</span></div>
+                            <div class="ranking-mini-list" id="ranking-adventure"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sync button (only visible when there's pending data) -->
+            <button id="sync-btn" class="sync-btn" style="display: none;">
+                <span class="sync-icon">🔄</span>
+                <span class="sync-text" data-i18n="menu.syncData">Sync data</span>
+            </button>
+            
+            <div class="menu-buttons">
+                <button class="menu-btn" data-mode="free">
+                    <span class="btn-icon">🎰</span>
+                    <span class="btn-text" data-i18n="menu.freePlay">Free Play</span>
+                    <span class="btn-desc" data-i18n="menu.freePlayDesc">No limits, just fun</span>
+                </button>
+                <button class="menu-btn" data-mode="timed">
+                    <span class="btn-icon">⏱️</span>
+                    <span class="btn-text" data-i18n="menu.timed">Timed Mode</span>
+                    <span class="btn-desc" data-i18n="menu.timedDesc">Max score in limited time</span>
+                </button>
+                <button class="menu-btn" data-mode="moves">
+                    <span class="btn-icon">🎯</span>
+                    <span class="btn-text" data-i18n="menu.moves">Moves</span>
+                    <span class="btn-desc" data-i18n="menu.movesDesc">Strategy with limited moves</span>
+                </button>
+                <button class="menu-btn" data-mode="adventure">
+                    <span class="btn-icon">🗺️</span>
+                    <span class="btn-text" data-i18n="menu.adventure">Adventure</span>
+                    <span class="btn-desc" data-i18n="menu.adventureDesc">30 levels - 3 difficulties</span>
+                </button>
+            </div>
+
+            <div class="menu-footer">
+                <button id="lang-btn" class="secondary-btn lang-btn" onclick="toggleLanguage()" title="Switch language">🇺🇸</button>
+                <button id="info-btn" class="secondary-btn">ℹ️ <span data-i18n="menu.info">Info</span></button>
+                <button id="settings-btn" class="secondary-btn">⚙️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Selection Screen (for modes with options) -->
+    <div id="select-screen" class="screen">
+        <div class="select-container">
+            <h2 id="select-title" data-i18n="select.title">Select</h2>
+            <div id="select-options" class="select-options"></div>
+            <button id="select-back" class="back-btn" data-i18n="select.back">← Back</button>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen">
+        <div id="game-container">
+            <!-- Header with game info -->
+            <div class="game-header">
+                <div class="header-left">
+                    <button id="game-menu-btn" class="icon-btn">☰</button>
+                </div>
+                <div class="header-center">
+                    <div class="score-display">
+                        <span class="score-label" data-i18n="game.score">Score</span>
+                        <span id="score" class="score-value">0</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div id="mode-info" class="mode-info">
+                        <!-- Filled dynamically based on mode -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coins and powerups bar -->
+            <div class="game-extras-bar">
+                <div class="game-coins">
+                    <span class="coin-icon">💰</span>
+                    <span id="game-coins">0</span>
+                </div>
+                <div class="powerups-bar">
+                    <button class="powerup-btn" id="powerup-shuffle" data-powerup="shuffle" 
+                            data-i18n-tooltip="powerups.shuffleTooltip"
+                            data-tooltip="Shuffles the board without creating matches.">
+                        <span class="powerup-icon">🔀</span>
+                        <span class="powerup-count" id="count-shuffle">0</span>
+                        <span class="powerup-name" data-i18n="game.shuffle">Shuffle</span>
+                    </button>
+                    <button class="powerup-btn" id="powerup-bomb" data-powerup="bomb"
+                            data-i18n-tooltip="powerups.bombTooltip"
+                            data-tooltip="Destroys a 4x4 area.">
+                        <span class="powerup-icon">💣</span>
+                        <span class="powerup-count" id="count-bomb">0</span>
+                        <span class="powerup-name" data-i18n="game.bomb">Bomb</span>
+                    </button>
+                    <button class="powerup-btn" id="powerup-extraTime" data-powerup="extraTime"
+                            data-i18n-tooltip="powerups.timeTooltip"
+                            data-tooltip="Adds +60 seconds.">
+                        <span class="powerup-icon">⏳</span>
+                        <span class="powerup-count" id="count-extraTime">0</span>
+                        <span class="powerup-name" data-i18n="game.time">+60s</span>
+                    </button>
+                    <button class="powerup-btn" id="powerup-extraMoves" data-powerup="extraMoves"
+                            data-i18n-tooltip="powerups.movesTooltip"
+                            data-tooltip="Adds +20 extra moves.">
+                        <span class="powerup-icon">🎯</span>
+                        <span class="powerup-count" id="count-extraMoves">0</span>
+                        <span class="powerup-name" data-i18n="game.extraMoves">+20 Mov</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Level objective (for modes that need it) -->
+            <div id="objective-bar" class="objective-bar hidden">
+                <div class="objective-content">
+                    <span id="objective-text" data-i18n="game.objective">Objective</span>
+                    <div id="objective-progress" class="objective-progress"></div>
+                </div>
+            </div>
+
+            <!-- Game board -->
+            <div id="board-container">
+                <div id="game-board" class="game-board"></div>
+            </div>
+
+            <!-- Quit button for mobile -->
+            <button id="mobile-quit-btn" class="mobile-quit-btn" data-i18n="game.quit">Quit</button>
+
+            <!-- Combo indicator -->
+            <div id="combo-display" class="combo-display hidden">
+                <span class="combo-text">COMBO</span>
+                <span class="combo-count">x2</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pause Modal -->
+    <div id="pause-modal" class="modal">
+        <div class="modal-content">
+            <h2 data-i18n="pause.title">⏸️ Paused</h2>
+            <div class="pause-stats">
+                <div><span data-i18n="pause.score">Score:</span> <span id="pause-score">0</span></div>
+                <div><span data-i18n="pause.coins">Coins:</span> <span id="pause-coins">0</span></div>
+                <div id="pause-extra-info"></div>
+            </div>
+            <div class="modal-buttons">
+                <button id="resume-btn" class="primary-btn" data-i18n="pause.resume">▶️ Resume</button>
+                <button id="restart-btn" class="secondary-btn" data-i18n="pause.restart">🔄 Restart</button>
+                <button id="quit-btn" class="danger-btn" data-i18n="pause.quit">🚪 Quit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="gameover-modal" class="modal">
+        <div class="modal-content gameover-content">
+            <div class="gameover-header">
+                <span class="gameover-icon">🎰</span>
+                <h2 id="gameover-title" data-i18n="gameover.title">Game Over</h2>
+            </div>
+            <div class="gameover-stats">
+                <div class="stat-row main-stat">
+                    <span data-i18n="gameover.score">Score</span>
+                    <span id="final-score" class="stat-value">0</span>
+                </div>
+                <div class="stat-row">
+                    <span data-i18n="gameover.bestCombo">Best Combo</span>
+                    <span id="final-combo" class="stat-value">x0</span>
+                </div>
+                <div class="stat-row">
+                    <span data-i18n="gameover.matches">Matches</span>
+                    <span id="final-matches" class="stat-value">0</span>
+                </div>
+                <div class="stat-row coins-earned">
+                    <span data-i18n="gameover.coinsEarned">💰 Coins earned</span>
+                    <span id="final-coins" class="stat-value">0</span>
+                </div>
+            </div>
+            <div id="ranking-feedback" class="ranking-feedback" style="display: none;">
+                <div id="ranking-position-text" class="ranking-position"></div>
+                <div id="ranking-record-badge" class="ranking-badge" style="display: none;"></div>
+            </div>
+            <div id="gameover-message" class="gameover-message"></div>
+            <div class="modal-buttons">
+                <button id="gameover-retry" class="primary-btn" data-i18n="gameover.retry">🔄 Retry</button>
+                <button id="gameover-menu" class="secondary-btn" data-i18n="gameover.menu">🏠 Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Victory Modal (Adventure) -->
+    <div id="victory-modal" class="modal">
+        <div class="modal-content victory-content">
+            <div class="victory-header">
+                <span class="victory-stars" id="victory-stars">⭐⭐⭐</span>
+                <h2 data-i18n="victory.title">Level Complete!</h2>
+            </div>
+            <div class="victory-stats">
+                <div class="stat-row main-stat">
+                    <span data-i18n="victory.score">Score</span>
+                    <span id="victory-score" class="stat-value">0</span>
+                </div>
+                <div class="stat-row coins-earned">
+                    <span data-i18n="victory.coinsEarned">💰 Coins earned</span>
+                    <span id="victory-coins" class="stat-value">0</span>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button id="next-level-btn" class="primary-btn" data-i18n="victory.nextLevel">▶️ Next Level</button>
+                <button id="victory-menu" class="secondary-btn" data-i18n="victory.menu">🏠 Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ranking Modal -->
+    <div id="ranking-modal" class="modal">
+        <div class="modal-content ranking-content">
+            <h2 data-i18n="ranking.title">🏆 Global Ranking</h2>
+            <div class="ranking-tabs">
+                <button class="tab-btn active" data-tab="free" data-i18n="ranking.free">Free</button>
+                <button class="tab-btn" data-tab="timed" data-i18n="ranking.timed">Timed</button>
+                <button class="tab-btn" data-tab="moves" data-i18n="ranking.moves">Moves</button>
+                <button class="tab-btn" data-tab="adventure" data-i18n="ranking.adventure">Adventure</button>
+            </div>
+            <div class="ranking-subtabs" id="adventure-subtabs" style="display: none;">
+                <button class="subtab-btn active" data-difficulty="easy" data-i18n="ranking.easy">Easy</button>
+                <button class="subtab-btn" data-difficulty="normal" data-i18n="ranking.normal">Normal</button>
+                <button class="subtab-btn" data-difficulty="hard" data-i18n="ranking.hard">Hard</button>
+            </div>
+            <div class="ranking-list">
+                <div class="ranking-header">
+                    <span>#</span>
+                    <span data-i18n="ranking.player">Player</span>
+                    <span data-i18n="ranking.points">Points</span>
+                </div>
+                <div id="ranking-entries"></div>
+            </div>
+            <button id="ranking-close" class="secondary-btn" data-i18n="ranking.close">Close</button>
+        </div>
+    </div>
+
+    <!-- Username Modal -->
+    <div id="username-modal" class="modal">
+        <div class="modal-content">
+            <div class="username-header">
+                <span class="slot-icon">🎰</span>
+                <h2 data-i18n="username.welcome">Welcome!</h2>
+            </div>
+            <p data-i18n="username.enterName">Enter your name for the ranking:</p>
+            <div class="username-input-container">
+                <input type="text" id="username-input" maxlength="12" data-i18n-placeholder="username.placeholder" placeholder="Your name..." autocomplete="off">
+                <div id="username-suggestions" class="username-suggestions"></div>
+            </div>
+            <div class="error" id="username-error"></div>
+            <button id="username-btn" class="primary-btn" data-i18n="username.play">Let's Play!</button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <h2 data-i18n="settings.title">⚙️ Settings</h2>
+            <div class="settings-list">
+                <div class="setting-row">
+                    <span data-i18n="settings.sound">Sound</span>
+                    <label class="switch">
+                        <input type="checkbox" id="sound-toggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-row">
+                    <span data-i18n="settings.vibration">Vibration</span>
+                    <label class="switch">
+                        <input type="checkbox" id="vibration-toggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="settings-user">
+                <span><span data-i18n="settings.player">Player:</span> <strong id="current-username">-</strong></span>
+                <button id="change-username-btn" class="small-btn" data-i18n="settings.change">Change</button>
+                <button id="logout-btn" class="small-btn danger" data-i18n="settings.logout">Logout</button>
+            </div>
+            <button id="settings-close" class="secondary-btn" data-i18n="settings.close">Close</button>
+        </div>
+    </div>
+
+    <!-- Info Modal -->
+    <div id="info-modal" class="modal">
+        <div class="modal-content info-modal-content">
+            <h2 data-i18n="info.title">ℹ️ How to Play</h2>
+            
+            <div class="info-tabs">
+                <button class="info-tab active" data-tab="modos" data-i18n="info.tabModes">Modes</button>
+                <button class="info-tab" data-tab="puntos" data-i18n="info.tabPoints">Points</button>
+                <button class="info-tab" data-tab="bonus" data-i18n="info.tabBonus">Bonus</button>
+                <button class="info-tab" data-tab="comodines" data-i18n="info.tabPowerups">Powerups</button>
+            </div>
+            
+            <div class="info-content">
+                <!-- Tab: Game Modes -->
+                <div class="info-panel active" id="panel-modos">
+                    <div class="info-item">
+                        <span class="info-icon">🎰</span>
+                        <div class="info-text">
+                            <strong data-i18n="info.freePlayTitle">Free Play</strong>
+                            <p data-i18n="info.freePlayDesc">No time or move limits. Play relaxed and practice your strategies.</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">⏱️</span>
+                        <div class="info-text">
+                            <strong data-i18n="info.timedTitle">Timed Mode</strong>
+                            <p data-i18n="info.timedDesc">Get the maximum score before time runs out. Choose between 60, 90, or 120 seconds.</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">🎯</span>
+                        <div class="info-text">
+                            <strong data-i18n="info.movesTitle">Moves</strong>
+                            <p data-i18n="info.movesDesc">You have a limited number of moves. Every move counts! Choose between 20, 30, or 50 moves.</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">🗺️</span>
+                        <div class="info-text">
+                            <strong data-i18n="info.adventureTitle">Adventure</strong>
+                            <p data-i18n="info.adventureDesc">30 levels with unique objectives in 3 difficulties. Complete missions like scoring points, making combos, or getting jackpots.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tab: Points -->
+                <div class="info-panel" id="panel-puntos">
+                    <h3 data-i18n="info.pointsTitle">Points per Symbol</h3>
+                    <div class="points-grid">
+                        <div class="point-row"><span>🍒 <span data-i18n="info.cherry">Cherry</span></span><span>10 pts</span></div>
+                        <div class="point-row"><span>🍉 <span data-i18n="info.watermelon">Watermelon</span></span><span>20 pts</span></div>
+                        <div class="point-row"><span>🍇 <span data-i18n="info.grape">Grape</span></span><span>30 pts</span></div>
+                        <div class="point-row"><span>🍋 <span data-i18n="info.lemon">Lemon</span></span><span>40 pts</span></div>
+                        <div class="point-row"><span>💎 <span data-i18n="info.diamond">Diamond</span></span><span>50 pts</span></div>
+                        <div class="point-row"><span>🍀 <span data-i18n="info.clover">Clover</span></span><span>60 pts</span></div>
+                        <div class="point-row highlight"><span>7️⃣ <span data-i18n="info.seven">Seven</span></span><span>100 pts</span></div>
+                    </div>
+                    <div class="info-note">
+                        <strong data-i18n="info.comboNote">Combos: Chaining consecutive matches multiplies your points. A x3 combo triples the points!</strong>
+                    </div>
+                </div>
+                
+                <!-- Tab: Bonus -->
+                <div class="info-panel" id="panel-bonus">
+                    <h3 data-i18n="info.bonusTitle">Special Bonuses</h3>
+                    <div class="info-item">
+                        <span class="info-icon">💰</span>
+                        <div class="info-text">
+                            <strong data-i18n="info.coinsTitle">Coins</strong>
+                            <p data-i18n="info.coinsDesc">Appear randomly on the board. Collect them by matching those cells.</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">✨</span>
+                        <div class="info-text">
+                            <strong data-i18n="info.match5Title">Match of 5+</strong>
+                            <p data-i18n="info.match5Desc">Matching 5 or more pieces gives you 5 bonus coins!</p>
+                        </div>
+                    </div>
+                    <div class="info-item highlight">
+                        <span class="info-icon">7️⃣</span>
+                        <div class="info-text">
+                            <strong data-i18n="info.jackpotTitle">Triple 7 Jackpot</strong>
+                            <p data-i18n="info.jackpotDesc">Match 3 or more sevens:</p>
+                            <ul>
+                                <li data-i18n="info.jackpot3">3 sevens: +777 pts, x2 for 3 moves</li>
+                                <li data-i18n="info.jackpot4">4 sevens: +1,777 pts, x3 for 4 moves</li>
+                                <li data-i18n="info.jackpot5">5+ sevens: +7,777 pts, x5 for 5 moves</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">🐧</span>
+                        <div class="info-text">
+                            <strong data-i18n="info.frozenTitle">Frozen Cells</strong>
+                            <p data-i18n="info.frozenDesc">In Adventure mode, penguins trapped in ice appear. Make adjacent matches to free them.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tab: Powerups -->
+                <div class="info-panel" id="panel-comodines">
+                    <h3 data-i18n="info.powerupsTitle">Powerups</h3>
+                    <p class="info-subtitle" data-i18n="info.powerupsSubtitle">Buy powerups with the coins you collect.</p>
+                    <div class="info-item">
+                        <span class="info-icon">🔀</span>
+                        <div class="info-text">
+                            <strong data-i18n="info.shuffleTitle">Shuffle</strong>
+                            <p data-i18n="info.shuffleDesc">Reorganizes the entire board without creating matches. Use it when you have no available moves.</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">💣</span>
+                        <div class="info-text">
+                            <strong data-i18n="info.bombTitle">Bomb</strong>
+                            <p data-i18n="info.bombDesc">Destroys a 4x4 area. Perfect for clearing problematic zones or breaking ice.</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">⏳</span>
+                        <div class="info-text">
+                            <strong data-i18n="info.extraTimeTitle">+60 Seconds</strong>
+                            <p data-i18n="info.extraTimeDesc">Adds 60 seconds to your time bank. Only works in timed modes.</p>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">🎯</span>
+                        <div class="info-text">
+                            <strong data-i18n="info.extraMovesTitle">+20 Moves</strong>
+                            <p data-i18n="info.extraMovesDesc">Adds 20 extra moves. Only works in modes with limited moves.</p>
+                        </div>
+                    </div>
+                    <div class="info-note">
+                        <strong data-i18n="info.powerupTip">Tip: Collect coins in easy levels to have powerups available in difficult levels.</strong>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="info-close" class="secondary-btn" data-i18n="settings.close">Close</button>
+        </div>
+    </div>
+
+    <!-- Particle effects -->
+    <div id="particles-container"></div>
+
+    <!-- Effect overlay -->
+    <div id="effect-overlay" class="effect-overlay"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
