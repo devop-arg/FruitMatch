@@ -34,7 +34,7 @@ A colorful match-3 puzzle game built with vanilla JavaScript, HTML5, and CSS3. M
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/weiro2020/FruitMatch.git
+git clone https://github.com/devop-arg/FruitMatch.git
 cd FruitMatch
 ```
 
@@ -58,7 +58,7 @@ The game includes an optional backend API for persistent scores and leaderboards
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/weiro2020/FruitMatch.git
+git clone https://github.com/devop-arg/FruitMatch.git
 cd FruitMatch
 ```
 
